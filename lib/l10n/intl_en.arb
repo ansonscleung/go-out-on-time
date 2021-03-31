@@ -1,0 +1,8 @@
+{
+  "@@locale": "en",
+  "goOutOnTime": "Go Out On Time",
+  "@goOutOnTime": {
+    "type": "text",
+    "description": "App Name"
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_out_on_time/types/common.dart';
 
 class RouteList {
   final String type;
@@ -26,12 +27,8 @@ class Route {
   final String route;
   final String bound;
   final String serviceType;
-  final String origEN;
-  final String origTC;
-  final String origSC;
-  final String destEN;
-  final String destTC;
-  final String destSC;
+  final IntlString orig;
+  final IntlString dest;
   final String dataTimestamp;
 
   Route(
@@ -39,12 +36,8 @@ class Route {
       @required this.route,
       @required this.bound,
       @required this.serviceType,
-      @required this.origEN,
-      @required this.origTC,
-      @required this.origSC,
-      @required this.destEN,
-      @required this.destTC,
-      @required this.destSC,
+      @required this.orig,
+      @required this.dest,
       @required this.dataTimestamp});
 
   factory Route.fromJson(Map<String, dynamic> json) {
@@ -53,12 +46,16 @@ class Route {
         route: json['route'],
         bound: json['bound'],
         serviceType: json['service_type'],
-        origEN: json['orig_en'],
-        origTC: json['orig_tc'],
-        origSC: json['orig_sc'],
-        destEN: json['dest_en'],
-        destTC: json['dest_tc'],
-        destSC: json['dest_sc'],
+        orig: new IntlString(
+          en: json['orig_en'],
+          tc: json['orig_tc'],
+          sc: json['orig_sc'],
+        ),
+        dest: new IntlString(
+          en: json['dest_en'],
+          tc: json['dest_tc'],
+          sc: json['dest_sc'],
+        ),
         dataTimestamp: json['data_timestamp']);
   }
 }
