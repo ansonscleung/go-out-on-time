@@ -13,12 +13,14 @@ class RouteList {
       @required this.generatedTimestamp,
       this.data});
 
-  factory RouteList.fromJson(Map<String, dynamic> json) {
+  factory RouteList.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
     return RouteList(
         type: json['type'],
         version: json['version'],
         generatedTimestamp: json['generated_timestamp'],
-        data: (json['data'] as List)?.map((route) => Route.fromJson(route))?.toList());
+        data: (json['data'] as List)
+            ?.map((route) => Route.fromJson(route, isKMB: isKMB))
+            ?.toList());
   }
 }
 
@@ -40,9 +42,9 @@ class Route {
       @required this.dest,
       @required this.dataTimestamp});
 
-  factory Route.fromJson(Map<String, dynamic> json) {
+  factory Route.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
     return Route(
-        co: json['co'],
+        co: isKMB ? "KMB/LWB" : json['co'],
         route: json['route'],
         bound: json['bound'],
         serviceType: json['service_type'],

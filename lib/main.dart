@@ -16,9 +16,7 @@ Future<RouteList> fetchKMBRoutes() async {
   final response =
       await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
   if (response.statusCode == 200) {
-    // If the server did return a 200 OK response,
-    // then parse the JSON.
-    return RouteList.fromJson(jsonDecode(response.body));
+    return RouteList.fromJson(jsonDecode(response.body), isKMB: true);
   } else {
     throw Exception('Failed to load KMBRouteList');
   }
