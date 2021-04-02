@@ -13,15 +13,24 @@ class RouteList {
       @required this.generatedTimestamp,
       this.data});
 
-  factory RouteList.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
+  factory RouteList.fromJson(Map<String, dynamic> json, String operator)  {
     return RouteList(
         type: json['type'],
         version: json['version'],
         generatedTimestamp: json['generated_timestamp'],
         // TODO: Logic to generate inbound/outbound route for Bravo Routes
         data: (json['data'] as List)
-            ?.map((route) => BusRoute.fromJson(route, isKMB: isKMB))
+            ?.map((route) => BusRoute.fromJson(route, operator))
             ?.toList());
+  }
+
+  factory RouteList.fromBravo(Map<String, dynamic> json, List<dynamic> routes)  {
+    return RouteList(
+        type: json['type'],
+        version: json['version'],
+        generatedTimestamp: json['generated_timestamp'],
+        // TODO: Logic to generate inbound/outbound route for Bravo Routes
+        data: routes);
   }
 }
 
@@ -43,11 +52,11 @@ class BusRoute {
       @required this.dest,
       @required this.dataTimestamp});
 
-  factory BusRoute.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
+  factory BusRoute.fromJson(Map<String, dynamic> json, String operator) {
     return BusRoute(
-        co: isKMB ? "KMB/LWB" : json['co'],
+        co: operator == "TI" ? "KMB/LWB" : json['co'],
         route: json['route'],
-        direction: isKMB ? (json['bound'] == "I" ? "inbound": "outbound"): json['bound'],
+        direction: operator == "TI" ? (json['bound'] == "I" ? "inbound": "outbound"): json['bound'],
         serviceType: json['service_type'],
         orig: new IntlString(
           en: json['orig_en'],
@@ -55,6 +64,33 @@ class BusRoute {
           sc: json['orig_sc'],
         ),
         dest: new IntlString(
+          en: json['dest_en'],
+          tc: json['dest_tc'],
+          sc: json['dest_sc'],
+        ),
+        dataTimestamp: json['data_timestamp']);
+  }
+
+  factory BusRoute.fromBravo(Map<String, dynamic> json, String direction, bool isInvert) {
+    return BusRoute(
+        co: json['co'],
+        route: json['route'],
+        direction: direction,
+        serviceType: json['service_type'],
+        orig: isInvert ? new IntlString(
+          en: json['dest_en'],
+          tc: json['dest_tc'],
+          sc: json['dest_sc'],
+        ) : new IntlString(
+          en: json['orig_en'],
+          tc: json['orig_tc'],
+          sc: json['orig_sc'],
+        ),
+        dest: isInvert? new IntlString(
+          en: json['orig_en'],
+          tc: json['orig_tc'],
+          sc: json['orig_sc'],
+        ) : new IntlString(
           en: json['dest_en'],
           tc: json['dest_tc'],
           sc: json['dest_sc'],

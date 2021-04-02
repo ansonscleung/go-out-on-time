@@ -17,7 +17,7 @@ Future<RouteList> fetchKMBRoutes() async {
   final response =
       await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
   if (response.statusCode == 200) {
-    return RouteList.fromJson(jsonDecode(response.body), isKMB: true);
+    return RouteList.fromJson(jsonDecode(response.body), "TI");
   } else {
     throw Exception('Failed to load KMBRouteList');
   }
@@ -27,7 +27,32 @@ Future<RouteList> fetchNWFBRoutes() async {
   final response = await http
       .get(Uri.https('rt.data.gov.hk', 'v1/transport/citybus-nwfb/route/nwfb'));
   if (response.statusCode == 200) {
-    return RouteList.fromJson(jsonDecode(response.body));
+    var routes = jsonDecode(response.body)['data'];
+    bool hasInbound, hasOutbound;
+    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+      final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
+          'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
+      if (inboundResponse.statusCode == 200) {
+        hasInbound = jsonDecode(inboundResponse.body)['data'].isNotEmpty;
+      } else {
+        throw Exception('Failed to load inbound route of ${route['route']}');
+      }
+      final outboundResponse = await http.get(Uri.https('rt.data.gov.hk',
+          'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/outbound'));
+      if (outboundResponse.statusCode == 200) {
+        hasOutbound = jsonDecode(outboundResponse.body)['data'].isNotEmpty;
+      } else {
+        throw Exception('Failed to load outbound route of ${route['route']}');
+      }
+      if (hasInbound && hasOutbound) {
+        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+      } else if (hasInbound) {
+        return [BusRoute.fromBravo(route, "inbound", false)];
+      } else {
+        return [BusRoute.fromBravo(route, "outbound", false)];
+      }
+    }));
+    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
   } else {
     throw Exception('Failed to load NWFBRouteList');
   }
@@ -37,7 +62,32 @@ Future<RouteList> fetchCTBRoutes() async {
   final response = await http
       .get(Uri.https('rt.data.gov.hk', 'v1/transport/citybus-nwfb/route/ctb'));
   if (response.statusCode == 200) {
-    return RouteList.fromJson(jsonDecode(response.body));
+    var routes = jsonDecode(response.body)['data'];
+    bool hasInbound, hasOutbound;
+    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+      final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
+          'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
+      if (inboundResponse.statusCode == 200) {
+        hasInbound = jsonDecode(inboundResponse.body)['data'].isNotEmpty;
+      } else {
+        throw Exception('Failed to load inbound route of ${route['route']}');
+      }
+      final outboundResponse = await http.get(Uri.https('rt.data.gov.hk',
+          'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/outbound'));
+      if (outboundResponse.statusCode == 200) {
+        hasOutbound = jsonDecode(outboundResponse.body)['data'].isNotEmpty;
+      } else {
+        throw Exception('Failed to load outbound route of ${route['route']}');
+      }
+      if (hasInbound && hasOutbound) {
+        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+      } else if (hasInbound) {
+        return [BusRoute.fromBravo(route, "inbound", false)];
+      } else {
+        return [BusRoute.fromBravo(route, "outbound", false)];
+      }
+    }));
+    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
   } else {
     throw Exception('Failed to load CTBRouteList');
   }
