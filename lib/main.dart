@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:collection/collection.dart';
 
+import 'screen/route/route.dart';
 import 'types/routes.dart';
 
 void main() {
@@ -113,15 +114,18 @@ class _HomePageState extends State<HomePage> {
           actions: <Widget>[
             PopupMenuButton(
               onSelected: (result) {
-                GoOutOnTime.of(context)
-                  .setLocale(result); },
+                GoOutOnTime.of(context).setLocale(result);
+              },
               itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                 PopupMenuItem(
+                PopupMenuItem(
                   value: Locale("en"),
                   child: Text('English'),
                 ),
-                 PopupMenuItem(
-                  value: Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
+                PopupMenuItem(
+                  value: Locale.fromSubtags(
+                      languageCode: 'zh',
+                      scriptCode: 'Hant',
+                      countryCode: 'HK'),
                   child: Text('Trad'),
                 ),
               ],
@@ -138,21 +142,29 @@ class _HomePageState extends State<HomePage> {
                   snapshot.data[2].data;
               return ListView(
                 padding: EdgeInsets.all(8),
-                children:
-                    (mainList..sort((a, b) => compareNatural(a.route, b.route)))
-                        .map((route) => Card(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  ListTile(
-                                    leading: Text(route.route ?? ""),
-                                    title: Text(route.dest.localeString(Localizations.localeOf(context)) ?? ""),
-                                    subtitle: Text(route.co ?? ""),
-                                  ),
-                                ],
-                              ),
-                            ))
-                        .toList(),
+                children: (mainList
+                      ..sort((a, b) => compareNatural(a.route, b.route)))
+                    .map(
+                      (route) => GestureDetector(
+                          child: Card(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                ListTile(
+                                  leading: Text(route.route ?? ""),
+                                  title: Text(route.dest.localeString(
+                                          Localizations.localeOf(context)) ??
+                                      ""),
+                                  subtitle: Text(route.co ?? ""),
+                                ),
+                              ],
+                            ),
+                          ),
+                          onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                  builder: (context) => RouteScreen(route)))),
+                    )
+                    .toList(),
               );
             } else if (snapshot.hasError) {
               return Text("${snapshot.error}");

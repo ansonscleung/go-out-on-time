@@ -5,7 +5,7 @@ class RouteList {
   final String type;
   final String version;
   final String generatedTimestamp;
-  final List<Route> data;
+  final List<BusRoute> data;
 
   RouteList(
       {@required this.type,
@@ -18,35 +18,36 @@ class RouteList {
         type: json['type'],
         version: json['version'],
         generatedTimestamp: json['generated_timestamp'],
+        // TODO: Logic to generate inbound/outbound route for Bravo Routes
         data: (json['data'] as List)
-            ?.map((route) => Route.fromJson(route, isKMB: isKMB))
+            ?.map((route) => BusRoute.fromJson(route, isKMB: isKMB))
             ?.toList());
   }
 }
 
-class Route {
+class BusRoute {
   final String co;
   final String route;
-  final String bound;
+  final String direction;
   final String serviceType;
   final IntlString orig;
   final IntlString dest;
   final String dataTimestamp;
 
-  Route(
+  BusRoute(
       {@required this.co,
       @required this.route,
-      @required this.bound,
+      @required this.direction,
       @required this.serviceType,
       @required this.orig,
       @required this.dest,
       @required this.dataTimestamp});
 
-  factory Route.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
-    return Route(
+  factory BusRoute.fromJson(Map<String, dynamic> json, {bool isKMB = false}) {
+    return BusRoute(
         co: isKMB ? "KMB/LWB" : json['co'],
         route: json['route'],
-        bound: json['bound'],
+        direction: isKMB ? (json['bound'] == "I" ? "inbound": "outbound"): json['bound'],
         serviceType: json['service_type'],
         orig: new IntlString(
           en: json['orig_en'],

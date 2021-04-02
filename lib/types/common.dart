@@ -8,7 +8,6 @@ class IntlString {
   IntlString({@required this.en, @required this.tc, @required this.sc});
 
   String localeString(Locale locale) {
-    print(locale.toLanguageTag());
     switch (locale.toLanguageTag()) {
       case 'en':
         {
