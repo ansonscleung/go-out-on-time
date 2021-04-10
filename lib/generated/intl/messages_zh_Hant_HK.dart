@@ -21,6 +21,7 @@ class MessageLookup extends MessageLookupByLibrary {
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
-    "goOutOnTime" : MessageLookupByLibrary.simpleMessage("準時出街")
+    "goOutOnTime" : MessageLookupByLibrary.simpleMessage("準時出街"),
+    "noETA" : MessageLookupByLibrary.simpleMessage("未有預計到達時間提供")
   };
 }

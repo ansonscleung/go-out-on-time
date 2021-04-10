@@ -18,7 +18,6 @@ class RouteList {
         type: json['type'],
         version: json['version'],
         generatedTimestamp: json['generated_timestamp'],
-        // TODO: Logic to generate inbound/outbound route for Bravo Routes
         data: (json['data'] as List)
             ?.map((route) => BusRoute.fromJson(route, operator))
             ?.toList());
@@ -29,7 +28,6 @@ class RouteList {
         type: json['type'],
         version: json['version'],
         generatedTimestamp: json['generated_timestamp'],
-        // TODO: Logic to generate inbound/outbound route for Bravo Routes
         data: routes);
   }
 }

@@ -1,4 +1,5 @@
 {
   "@@locale": "zh",
-  "goOutOnTime": "準時出街"
+  "goOutOnTime": "準時出街",
+  "noETA": "未有預計到達時間提供"
 }

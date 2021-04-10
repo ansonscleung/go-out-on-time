@@ -4,5 +4,10 @@
   "@goOutOnTime": {
     "type": "text",
     "description": "App Name"
+  },
+  "noETA": "No ETA Provided",
+  "@noETA": {
+    "type": "text",
+    "description": "No ETA"
   }
 }

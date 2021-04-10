@@ -44,6 +44,16 @@ class S {
       args: [],
     );
   }
+
+  /// `No ETA Provided`
+  String get noETA {
+    return Intl.message(
+      'No ETA Provided',
+      name: 'noETA',
+      desc: 'No ETA',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
