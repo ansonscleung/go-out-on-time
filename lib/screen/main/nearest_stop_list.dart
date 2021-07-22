@@ -53,16 +53,13 @@ class _NearestStopListWidgetState extends State<NearestStopListWidget> {
                   return ListView(
                     padding: EdgeInsets.all(8),
                     children: mainList
-                        .where((stop) =>
-                            (stop.lat - location.latitude).abs() < 0.005 &&
-                            (stop.long - location.longitude).abs() < 0.005)
-                        .map(
+                        .expand(
                           (stop) {
                             LatLng stopLoc = LatLng(stop.lat, stop.long);
                             LatLng currLoc =
                                 LatLng(location.latitude, location.longitude);
                             stop.distance = distance(stopLoc, currLoc);
-                            return stop;
+                            return stop.distance <= 500 ? [stop] : [];
                           },
                         )
                     .sorted((a, b) => a.distance.compareTo(b.distance))
