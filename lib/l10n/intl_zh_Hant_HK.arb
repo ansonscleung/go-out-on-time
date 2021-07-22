@@ -1,5 +1,7 @@
 {
   "@@locale": "zh_Hant_HK",
   "goOutOnTime": "準時出街",
-  "noETA": "未有預計到達時間提供"
+  "noETA": "未有預計到達時間提供",
+  "kilometre": "{kilometre} 公里",
+  "metre": "{metre} 米"
 }

@@ -9,5 +9,19 @@
   "@noETA": {
     "type": "text",
     "description": "No ETA"
+  },
+  "kilometre": "{kilometre} km",
+  "@kilometre": {
+    "type": "text",
+    "placeholders": {
+      "kilometre": {}
+    }
+  },
+  "metre": "{metre} m",
+  "@metre": {
+    "type": "text",
+    "placeholders": {
+      "metre": {}
+    }
   }
 }

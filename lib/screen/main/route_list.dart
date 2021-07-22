@@ -1,24 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_search_bar/flutter_search_bar.dart';
-import 'package:go_out_on_time/screen/main/nearest_stop_list.dart';
-import 'package:go_out_on_time/screen/main/route_list.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:collection/collection.dart';
 
-import 'screen/route/route.dart';
-import 'types/routes.dart';
-
-void main() {
-  runApp(GoOutOnTime());
-}
+import 'package:go_out_on_time/screen/route/route.dart';
+import 'package:go_out_on_time/types/routes.dart';
 
 Future<RouteList> fetchKMBRoutes() async {
   final response =
-      await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
+  await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
   if (response.statusCode == 200) {
     return RouteList.fromJson(jsonDecode(response.body), "TI");
   } else {
@@ -96,104 +87,16 @@ Future<RouteList> fetchCTBRoutes() async {
   }
 }
 
-class GoOutOnTime extends StatefulWidget {
+class RouteListWidget extends StatefulWidget {
   @override
-  _GoOutOnTimeState createState() => _GoOutOnTimeState();
-
-  static _GoOutOnTimeState of(BuildContext context) =>
-      context.findAncestorStateOfType<_GoOutOnTimeState>();
+  _RouteListWidgetState createState() => _RouteListWidgetState();
 }
 
-class _GoOutOnTimeState extends State<GoOutOnTime> {
-  Locale _locale;
-
-  void setLocale(Locale value) {
-    setState(() {
-      _locale = value;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Go Out On Time',
-      localizationsDelegates: [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: [
-        const Locale('en', ''),
-        const Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
-        const Locale.fromSubtags(
-            languageCode: 'zh', scriptCode: 'Hans', countryCode: 'CN'),
-      ],
-      locale: _locale,
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: HomePage(),
-    );
-  }
-}
-
-class HomePage extends StatefulWidget {
-  HomePage({Key key}) : super(key: key);
-
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
+class _RouteListWidgetState extends State<RouteListWidget> {
   Future<RouteList> futureKMBRouteList;
   Future<RouteList> futureNWFBRouteList;
   Future<RouteList> futureCTBRouteList;
-  SearchBar searchBar;
-  String searchRoute = "1";
 
-  AppBar buildAppBar(BuildContext context) {
-    return AppBar(
-        title: Text(AppLocalizations.of(context).goOutOnTime),
-        actions: <Widget>[
-          searchBar.getSearchAction(context),
-          PopupMenuButton(
-            onSelected: (result) {
-              GoOutOnTime.of(context).setLocale(result);
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-              PopupMenuItem(
-                value: Locale("en"),
-                child: Text('English'),
-              ),
-              PopupMenuItem(
-                value: Locale.fromSubtags(
-                    languageCode: 'zh',
-                    scriptCode: 'Hant',
-                    countryCode: 'HK'),
-                child: Text('Trad'),
-              ),
-            ],
-          ),
-        ],            bottom: TabBar(
-      tabs: [
-        Tab(icon: Icon(Icons.directions_car)),
-        Tab(icon: Icon(Icons.directions_transit)),
-      ],
-    ),
-    );
-  }
-
-  _HomePageState() {
-    searchBar = new SearchBar(
-        setState: setState,
-        onSubmitted: (search) {
-          searchRoute = search;
-        },
-        buildDefaultAppBar: buildAppBar
-    );
-  }
   @override
   void initState() {
     super.initState();
@@ -204,17 +107,47 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: searchBar.build(context),
-          body: TabBarView(
-            children: [
-              RouteListWidget(),
-              NearestStopListWidget(),
-            ],
-          ),
-        ),
+    return Center(
+      child: FutureBuilder<List<RouteList>>(
+        future: Future.wait(
+            [futureKMBRouteList, futureNWFBRouteList, futureCTBRouteList]),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            var mainList = snapshot.data[0].data +
+                snapshot.data[1].data +
+                snapshot.data[2].data;
+            return ListView(
+              padding: EdgeInsets.all(8),
+              children: (mainList
+                ..sort((a, b) => compareNatural(a.route, b.route)))//.where((element) => element.route.startsWith(searchRoute))
+                  .map(
+                    (route) => GestureDetector(
+                    child: Card(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          ListTile(
+                            leading: Text(route.route ?? ""),
+                            title: Text(route.dest.localeString(
+                                Localizations.localeOf(context)) ??
+                                ""),
+                            subtitle: Text(route.co ?? ""),
+                          ),
+                        ],
+                      ),
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (context) => RouteScreen(route)))),
+              )
+                  .toList(),
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          return CircularProgressIndicator();
+        },
+      ),
     );
   }
 }

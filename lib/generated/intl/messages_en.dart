@@ -19,9 +19,15 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
+  static m0(kilometre) => "${kilometre} km";
+
+  static m1(metre) => "${metre} m";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static _notInlinedMessages(_) => <String, Function> {
     "goOutOnTime" : MessageLookupByLibrary.simpleMessage("Go Out On Time"),
+    "kilometre" : m0,
+    "metre" : m1,
     "noETA" : MessageLookupByLibrary.simpleMessage("No ETA Provided")
   };
 }

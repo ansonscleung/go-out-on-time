@@ -54,6 +54,26 @@ class S {
       args: [],
     );
   }
+
+  /// `{kilometre} km`
+  String kilometre(Object kilometre) {
+    return Intl.message(
+      '$kilometre km',
+      name: 'kilometre',
+      desc: '',
+      args: [kilometre],
+    );
+  }
+
+  /// `{metre} m`
+  String metre(Object metre) {
+    return Intl.message(
+      '$metre m',
+      name: 'metre',
+      desc: '',
+      args: [metre],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
