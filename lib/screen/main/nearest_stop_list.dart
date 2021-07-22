@@ -40,21 +40,31 @@ class _NearestStopListWidgetState extends State<NearestStopListWidget> {
   Widget build(BuildContext context) {
     Future<LocationData> currentLocation = getLocation();
     return Center(
-      child: FutureBuilder<List<dynamic>>(
-        future: Future.wait([futureKMBStopList, currentLocation]),
+      child: FutureBuilder<LocationData>(
+        future: currentLocation,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            var mainList = snapshot.data[0].data;
-            var location = snapshot.data[1];
-            return ListView(
-              padding: EdgeInsets.all(8),
-              children: (mainList
-                    ..sort((a, b) => compareNatural(a.stop,
-                        b.stop))) //.where((element) => element.route.startsWith(searchRoute))
-                  .map(
-                    (stop) => StopCard(stop, location),
-                  )
-                  .toList(),
+            var location = snapshot.data;
+            return FutureBuilder<List<StopList>>(
+              future: Future.wait([futureKMBStopList]),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  var mainList = snapshot.data[0].data;
+                  return ListView(
+                    padding: EdgeInsets.all(8),
+                    children: (mainList
+                      ..sort((a, b) => compareNatural(a.stop,
+                          b.stop)))
+                        .map(
+                          (stop) => StopCard(stop, location),
+                    )
+                        .toList(),
+                  );
+                } else if (snapshot.hasError) {
+                  return Text("${snapshot.error}");
+                }
+                return CircularProgressIndicator();
+              },
             );
           } else if (snapshot.hasError) {
             return Text("${snapshot.error}");
