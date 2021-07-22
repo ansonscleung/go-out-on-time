@@ -10,11 +10,11 @@ class StopList {
 
   StopList(
       {@required this.type,
-        @required this.version,
-        @required this.generatedTimestamp,
-        this.data});
+      @required this.version,
+      @required this.generatedTimestamp,
+      this.data});
 
-  factory StopList.fromJson(Map<String, dynamic> json, String operator)  {
+  factory StopList.fromJson(Map<String, dynamic> json, String operator) {
     return StopList(
         type: json['type'],
         version: json['version'],
@@ -23,13 +23,15 @@ class StopList {
             ?.map((stop) => Stop.fromStopList(stop))
             ?.toList());
   }
+}
 
-}class Stop {
+class Stop {
   final String stop;
   final IntlString name;
   final double lat;
   final double long;
   final String dataTimestamp;
+  double distance;
 
   Stop(
       {@required this.stop,

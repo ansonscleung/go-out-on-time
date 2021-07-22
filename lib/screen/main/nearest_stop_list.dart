@@ -52,12 +52,23 @@ class _NearestStopListWidgetState extends State<NearestStopListWidget> {
                   var mainList = snapshot.data[0].data;
                   return ListView(
                     padding: EdgeInsets.all(8),
-                    children: (mainList
-                      ..sort((a, b) => compareNatural(a.stop,
-                          b.stop)))
+                    children: mainList
+                        .where((stop) =>
+                            (stop.lat - location.latitude).abs() < 0.005 &&
+                            (stop.long - location.longitude).abs() < 0.005)
                         .map(
-                          (stop) => StopCard(stop, location),
-                    )
+                          (stop) {
+                            LatLng stopLoc = LatLng(stop.lat, stop.long);
+                            LatLng currLoc =
+                                LatLng(location.latitude, location.longitude);
+                            stop.distance = distance(stopLoc, currLoc);
+                            return stop;
+                          },
+                        )
+                    .sorted((a, b) => a.distance.compareTo(b.distance))
+                        .map(
+                          (stop) => StopCard(stop),
+                        )
                         .toList(),
                   );
                 } else if (snapshot.hasError) {
@@ -78,8 +89,7 @@ class _NearestStopListWidgetState extends State<NearestStopListWidget> {
 
 class StopCard extends StatefulWidget {
   Stop stop;
-  LocationData locationData;
-  StopCard(this.stop, this.locationData);
+  StopCard(this.stop);
 
   @override
   _StopCardState createState() => _StopCardState();
@@ -88,25 +98,21 @@ class StopCard extends StatefulWidget {
 class _StopCardState extends State<StopCard> {
   @override
   Widget build(BuildContext context) {
-    LatLng stopLoc = LatLng(widget.stop.lat, widget.stop.long);
-    LatLng currLoc =
-        LatLng(widget.locationData.latitude, widget.locationData.longitude);
-    num dist = distance(stopLoc, currLoc);
     return GestureDetector(
       child: Card(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             ListTile(
-                //leading: Text(route.route ?? ""),
-                title: Text(widget.stop.name
-                        .localeString(Localizations.localeOf(context)) ??
-                    ""),
-                subtitle: Text(dist > 1000
+              //leading: Text(route.route ?? ""),
+              title: Text(widget.stop.name
+                      .localeString(Localizations.localeOf(context)) ??
+                  ""),
+              subtitle: Text(widget.stop.distance > 1000
                     ? AppLocalizations.of(context)
-                        .kilometre((dist / 1000).toStringAsFixed(2))
+                        .kilometre((widget.stop.distance / 1000).toStringAsFixed(2))
                     : AppLocalizations.of(context)
-                        .metre(dist.toStringAsFixed(0)))),
+                        .metre(widget.stop.distance.toStringAsFixed(0)))),
           ],
         ),
       ),
