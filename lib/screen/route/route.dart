@@ -2,12 +2,16 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:geodesy/geodesy.dart';
 import 'package:go_out_on_time/types/eta.dart';
 import 'package:go_out_on_time/types/route_stop.dart';
 import 'package:go_out_on_time/types/routes.dart';
 import 'package:go_out_on_time/types/stop.dart';
+import 'package:go_out_on_time/utils/distance.dart';
+import 'package:go_out_on_time/utils/get_location.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import 'package:timeago_flutter/timeago_flutter.dart';
 
 Future<RouteStopList> fetchRouteStopList(BusRoute route) async {
@@ -69,38 +73,67 @@ class _RouteScreenState extends State<RouteScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Future<LocationData> currentLocation = getLocation();
     return Scaffold(
         appBar: AppBar(title: Text('New Screen')),
         body: Center(
-          child: FutureBuilder<RouteStopList>(
-            future: futureRouteStopList,
+          child: FutureBuilder<LocationData>(
+            future: currentLocation,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                return ListView(
-                  padding: EdgeInsets.all(8),
-                  children: snapshot.data.data
-                      .map(
-                        (stop) => GestureDetector(
-                            child: Card(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: <Widget>[
-                                  ExpansionTile(
-                                      leading: Text(stop.seq.toString() ?? ""),
-                                      title: Text(stop.stopInfo?.name
-                                              ?.localeString(
-                                                  Localizations.localeOf(
-                                                      context)) ??
-                                          ""),
-                                      children: <Widget>[
-                                        ETAWidget(widget.route, stop.stop)
-                                      ]),
-                                ],
-                              ),
-                            ),
-                            onTap: () => {}),
-                      )
-                      .toList(),
+                var location = snapshot.data;
+                return FutureBuilder<RouteStopList>(
+                  future: futureRouteStopList,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return ListView(
+                        padding: EdgeInsets.all(8),
+                        children: snapshot.data.data.map(
+                          (stop) {
+                            LatLng stopLoc =
+                                LatLng(stop.stopInfo.lat, stop.stopInfo.long);
+                            LatLng currLoc =
+                                LatLng(location.latitude, location.longitude);
+                            stop.stopInfo.distance = distance(stopLoc, currLoc);
+                            return GestureDetector(
+                                child: Card(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      ExpansionTile(
+                                          leading:
+                                              Text(stop.seq.toString() ?? ""),
+                                          title: Text(stop.stopInfo?.name
+                                                  ?.localeString(
+                                                      Localizations.localeOf(
+                                                          context)) ??
+                                              ""),
+                                          subtitle: Text(
+                                              stop.stopInfo.distance > 1000
+                                                  ? AppLocalizations.of(context)
+                                                      .kilometre((stop.stopInfo
+                                                                  .distance /
+                                                              1000)
+                                                          .toStringAsFixed(2))
+                                                  : AppLocalizations.of(context)
+                                                      .metre(stop
+                                                          .stopInfo.distance
+                                                          .toStringAsFixed(0))),
+                                          children: <Widget>[
+                                            ETAWidget(widget.route, stop.stop)
+                                          ]),
+                                    ],
+                                  ),
+                                ),
+                                onTap: () => {});
+                          },
+                        ).toList(),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text("${snapshot.error}");
+                    }
+                    return CircularProgressIndicator();
+                  },
                 );
               } else if (snapshot.hasError) {
                 return Text("${snapshot.error}");
@@ -158,11 +191,12 @@ class _ETAWidgetState extends State<ETAWidget> {
       future: futureETA,
       builder: (_context, snapshot) {
         if (snapshot.hasData) {
-          if (snapshot.data.data.isNotEmpty && snapshot.data.data[0].eta == null) {
+          if (snapshot.data.data.isNotEmpty &&
+              snapshot.data.data[0].eta == null) {
             return Padding(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                child: Text(snapshot.data.data[0].remark.localeString(
-                Localizations.localeOf(context))));
+                child: Text(snapshot.data.data[0].remark
+                    .localeString(Localizations.localeOf(context))));
           }
           var effectiveETAs = snapshot.data.data.where((eta) =>
               eta.direction == widget.route.direction &&
