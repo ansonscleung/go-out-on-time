@@ -86,42 +86,56 @@ class _RouteScreenState extends State<RouteScreen> {
                   future: futureRouteStopList,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
+                      List<RouteStop> stopWithDistance =
+                          snapshot.data.data.map((stop) {
+                        LatLng stopLoc =
+                            LatLng(stop.stopInfo.lat, stop.stopInfo.long);
+                        LatLng currLoc =
+                            LatLng(location.latitude, location.longitude);
+                        stop.stopInfo.distance = distance(stopLoc, currLoc);
+                        return stop;
+                      }).toList();
+                      String nearestStop = stopWithDistance
+                              .where((stop) => stop.stopInfo.distance < 500)
+                              ?.reduce((curr, next) => curr.stopInfo.distance <
+                                      next.stopInfo.distance
+                                  ? curr
+                                  : next)
+                              ?.stop ??
+                          "";
                       return ListView(
                         padding: EdgeInsets.all(8),
-                        children: snapshot.data.data.map(
+                        children: stopWithDistance.map(
                           (stop) {
-                            LatLng stopLoc =
-                                LatLng(stop.stopInfo.lat, stop.stopInfo.long);
-                            LatLng currLoc =
-                                LatLng(location.latitude, location.longitude);
-                            stop.stopInfo.distance = distance(stopLoc, currLoc);
                             return GestureDetector(
                                 child: Card(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: <Widget>[
                                       ExpansionTile(
-                                          leading:
-                                              Text(stop.seq.toString() ?? ""),
-                                          title: Text(stop.stopInfo?.name
-                                                  ?.localeString(
-                                                      Localizations.localeOf(
-                                                          context)) ??
-                                              ""),
-                                          subtitle: Text(
-                                              stop.stopInfo.distance > 1000
-                                                  ? AppLocalizations.of(context)
-                                                      .kilometre((stop.stopInfo
-                                                                  .distance /
-                                                              1000)
-                                                          .toStringAsFixed(2))
-                                                  : AppLocalizations.of(context)
-                                                      .metre(stop
-                                                          .stopInfo.distance
-                                                          .toStringAsFixed(0))),
-                                          children: <Widget>[
-                                            ETAWidget(widget.route, stop.stop)
-                                          ]),
+                                        leading:
+                                            Text(stop.seq.toString() ?? ""),
+                                        title: Text(stop.stopInfo?.name
+                                                ?.localeString(
+                                                    Localizations.localeOf(
+                                                        context)) ??
+                                            ""),
+                                        subtitle: Text(stop.stopInfo.distance >
+                                                1000
+                                            ? AppLocalizations.of(context)
+                                                .kilometre(
+                                                    (stop.stopInfo.distance /
+                                                            1000)
+                                                        .toStringAsFixed(2))
+                                            : AppLocalizations.of(context)
+                                                .metre(stop.stopInfo.distance
+                                                    .toStringAsFixed(0))),
+                                        children: <Widget>[
+                                          ETAWidget(widget.route, stop.stop)
+                                        ],
+                                        initiallyExpanded:
+                                            nearestStop == stop.stop,
+                                      ),
                                     ],
                                   ),
                                 ),
