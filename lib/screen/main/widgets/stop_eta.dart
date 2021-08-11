@@ -85,9 +85,12 @@ class _ETAWidgetState extends State<StopETAWidget> {
                         (eta) => TableRow(
                           children: [
                             Text(eta.route ?? ""),
-                            Marquee(text: eta.dest.localeString(
-                                    Localizations.localeOf(context)) ??
-                                ""),
+                            Text(
+                              eta.dest.localeString(
+                                    Localizations.localeOf(context),
+                                  ) ??
+                                  "",
+                            ),
                             Column(
                               children: [
                                 Row(
