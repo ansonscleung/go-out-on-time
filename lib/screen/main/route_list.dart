@@ -9,7 +9,7 @@ import 'package:go_out_on_time/types/routes.dart';
 
 Future<RouteList> fetchKMBRoutes() async {
   final response =
-  await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
+      await http.get(Uri.https('data.etabus.gov.hk', 'v1/transport/kmb/route'));
   if (response.statusCode == 200) {
     return RouteList.fromJson(jsonDecode(response.body), "TI");
   } else {
@@ -23,7 +23,8 @@ Future<RouteList> fetchNWFBRoutes() async {
   if (response.statusCode == 200) {
     var routes = jsonDecode(response.body)['data'];
     bool hasInbound, hasOutbound;
-    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+    var result =
+        await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
       final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
           'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
       if (inboundResponse.statusCode == 200) {
@@ -39,14 +40,22 @@ Future<RouteList> fetchNWFBRoutes() async {
         throw Exception('Failed to load outbound route of ${route['route']}');
       }
       if (hasInbound && hasOutbound) {
-        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+        return [
+          BusRoute.fromBravo(route, "inbound", true),
+          BusRoute.fromBravo(route, "outbound", false)
+        ];
       } else if (hasInbound) {
         return [BusRoute.fromBravo(route, "inbound", false)];
       } else {
         return [BusRoute.fromBravo(route, "outbound", false)];
       }
     }));
-    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
+    return RouteList.fromBravo(
+        jsonDecode(response.body),
+        result
+            .expand((element) => element)
+            .map((route) => route as BusRoute)
+            .toList());
   } else {
     throw Exception('Failed to load NWFBRouteList');
   }
@@ -58,7 +67,8 @@ Future<RouteList> fetchCTBRoutes() async {
   if (response.statusCode == 200) {
     var routes = jsonDecode(response.body)['data'];
     bool hasInbound, hasOutbound;
-    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+    var result =
+        await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
       final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
           'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
       if (inboundResponse.statusCode == 200) {
@@ -74,20 +84,31 @@ Future<RouteList> fetchCTBRoutes() async {
         throw Exception('Failed to load outbound route of ${route['route']}');
       }
       if (hasInbound && hasOutbound) {
-        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+        return [
+          BusRoute.fromBravo(route, "inbound", true),
+          BusRoute.fromBravo(route, "outbound", false)
+        ];
       } else if (hasInbound) {
         return [BusRoute.fromBravo(route, "inbound", false)];
       } else {
         return [BusRoute.fromBravo(route, "outbound", false)];
       }
     }));
-    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
+    return RouteList.fromBravo(
+        jsonDecode(response.body),
+        result
+            .expand((element) => element)
+            .map((route) => route as BusRoute)
+            .toList());
   } else {
     throw Exception('Failed to load CTBRouteList');
   }
 }
 
 class RouteListWidget extends StatefulWidget {
+  final String searchRoute;
+  RouteListWidget({this.searchRoute});
+
   @override
   _RouteListWidgetState createState() => _RouteListWidgetState();
 }
@@ -119,27 +140,29 @@ class _RouteListWidgetState extends State<RouteListWidget> {
             return ListView(
               padding: EdgeInsets.all(8),
               children: (mainList
-                ..sort((a, b) => compareNatural(a.route, b.route)))//.where((element) => element.route.startsWith(searchRoute))
+                    ..sort((a, b) => compareNatural(a.route, b.route)))
+                  .where(
+                      (element) => element.route.startsWith(widget.searchRoute))
                   .map(
                     (route) => GestureDetector(
-                    child: Card(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          ListTile(
-                            leading: Text(route.route ?? ""),
-                            title: Text(route.dest.localeString(
-                                Localizations.localeOf(context)) ??
-                                ""),
-                            subtitle: Text(route.co ?? ""),
+                        child: Card(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ListTile(
+                                leading: Text(route.route ?? ""),
+                                title: Text(route.dest.localeString(
+                                        Localizations.localeOf(context)) ??
+                                    ""),
+                                subtitle: Text(route.co ?? ""),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                            builder: (context) => RouteScreen(route)))),
-              )
+                        ),
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (context) => RouteScreen(route)))),
+                  )
                   .toList(),
             );
           } else if (snapshot.hasError) {

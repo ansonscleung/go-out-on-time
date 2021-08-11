@@ -32,7 +32,8 @@ Future<RouteList> fetchNWFBRoutes() async {
   if (response.statusCode == 200) {
     var routes = jsonDecode(response.body)['data'];
     bool hasInbound, hasOutbound;
-    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+    var result =
+        await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
       final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
           'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
       if (inboundResponse.statusCode == 200) {
@@ -48,14 +49,22 @@ Future<RouteList> fetchNWFBRoutes() async {
         throw Exception('Failed to load outbound route of ${route['route']}');
       }
       if (hasInbound && hasOutbound) {
-        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+        return [
+          BusRoute.fromBravo(route, "inbound", true),
+          BusRoute.fromBravo(route, "outbound", false)
+        ];
       } else if (hasInbound) {
         return [BusRoute.fromBravo(route, "inbound", false)];
       } else {
         return [BusRoute.fromBravo(route, "outbound", false)];
       }
     }));
-    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
+    return RouteList.fromBravo(
+        jsonDecode(response.body),
+        result
+            .expand((element) => element)
+            .map((route) => route as BusRoute)
+            .toList());
   } else {
     throw Exception('Failed to load NWFBRouteList');
   }
@@ -67,7 +76,8 @@ Future<RouteList> fetchCTBRoutes() async {
   if (response.statusCode == 200) {
     var routes = jsonDecode(response.body)['data'];
     bool hasInbound, hasOutbound;
-    var result = await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
+    var result =
+        await Future.wait(routes.map<Future<Iterable<BusRoute>>>((route) async {
       final inboundResponse = await http.get(Uri.https('rt.data.gov.hk',
           'v1/transport/citybus-nwfb/route-stop/${route['co']}/${route['route']}/inbound'));
       if (inboundResponse.statusCode == 200) {
@@ -83,14 +93,22 @@ Future<RouteList> fetchCTBRoutes() async {
         throw Exception('Failed to load outbound route of ${route['route']}');
       }
       if (hasInbound && hasOutbound) {
-        return [BusRoute.fromBravo(route, "inbound", true), BusRoute.fromBravo(route, "outbound", false)];
+        return [
+          BusRoute.fromBravo(route, "inbound", true),
+          BusRoute.fromBravo(route, "outbound", false)
+        ];
       } else if (hasInbound) {
         return [BusRoute.fromBravo(route, "inbound", false)];
       } else {
         return [BusRoute.fromBravo(route, "outbound", false)];
       }
     }));
-    return RouteList.fromBravo(jsonDecode(response.body), result.expand((element) => element).map((route) => route as BusRoute).toList());
+    return RouteList.fromBravo(
+        jsonDecode(response.body),
+        result
+            .expand((element) => element)
+            .map((route) => route as BusRoute)
+            .toList());
   } else {
     throw Exception('Failed to load CTBRouteList');
   }
@@ -155,33 +173,32 @@ class _HomePageState extends State<HomePage> {
 
   AppBar buildAppBar(BuildContext context) {
     return AppBar(
-        title: Text(AppLocalizations.of(context).goOutOnTime),
-        actions: <Widget>[
-          searchBar.getSearchAction(context),
-          PopupMenuButton(
-            onSelected: (result) {
-              GoOutOnTime.of(context).setLocale(result);
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-              PopupMenuItem(
-                value: Locale("en"),
-                child: Text('English'),
-              ),
-              PopupMenuItem(
-                value: Locale.fromSubtags(
-                    languageCode: 'zh',
-                    scriptCode: 'Hant',
-                    countryCode: 'HK'),
-                child: Text('Trad'),
-              ),
-            ],
-          ),
-        ],            bottom: TabBar(
-      tabs: [
-        Tab(icon: Icon(Icons.directions_car)),
-        Tab(icon: Icon(Icons.directions_transit)),
+      title: Text(AppLocalizations.of(context).goOutOnTime),
+      actions: <Widget>[
+        searchBar.getSearchAction(context),
+        PopupMenuButton(
+          onSelected: (result) {
+            GoOutOnTime.of(context).setLocale(result);
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+            PopupMenuItem(
+              value: Locale("en"),
+              child: Text('English'),
+            ),
+            PopupMenuItem(
+              value: Locale.fromSubtags(
+                  languageCode: 'zh', scriptCode: 'Hant', countryCode: 'HK'),
+              child: Text('Trad'),
+            ),
+          ],
+        ),
       ],
-    ),
+      bottom: TabBar(
+        tabs: [
+          Tab(icon: Icon(Icons.directions_car)),
+          Tab(icon: Icon(Icons.directions_transit)),
+        ],
+      ),
     );
   }
 
@@ -191,8 +208,7 @@ class _HomePageState extends State<HomePage> {
         onSubmitted: (search) {
           searchRoute = search;
         },
-        buildDefaultAppBar: buildAppBar
-    );
+        buildDefaultAppBar: buildAppBar);
   }
   @override
   void initState() {
@@ -205,16 +221,18 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: searchBar.build(context),
-          body: TabBarView(
-            children: [
-              RouteListWidget(),
-              NearestStopListWidget(),
-            ],
-          ),
+      length: 2,
+      child: Scaffold(
+        appBar: searchBar.build(context),
+        body: TabBarView(
+          children: [
+            RouteListWidget(
+              searchRoute: searchRoute,
+            ),
+            NearestStopListWidget(),
+          ],
         ),
+      ),
     );
   }
 }
