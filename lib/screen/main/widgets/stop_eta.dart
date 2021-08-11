@@ -13,6 +13,7 @@ import 'package:go_out_on_time/utils/get_location.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
+import 'package:marquee/marquee.dart';
 import 'package:timeago_flutter/timeago_flutter.dart';
 
 Future<ETAList> fetchKMBStopETAList(Stop stop) async {
@@ -77,14 +78,14 @@ class _ETAWidgetState extends State<StopETAWidget> {
                   columnWidths: {
                     0: FlexColumnWidth(2),
                     1: FlexColumnWidth(7),
-                    2: FlexColumnWidth(4),
+                    2: FlexColumnWidth(5),
                   },
                   children: effectiveFirstETAs
                       .map(
                         (eta) => TableRow(
                           children: [
                             Text(eta.route ?? ""),
-                            Text(eta.dest.localeString(
+                            Marquee(text: eta.dest.localeString(
                                     Localizations.localeOf(context)) ??
                                 ""),
                             Column(

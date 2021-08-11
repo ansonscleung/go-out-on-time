@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:async';
 
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:geodesy/geodesy.dart';
+import 'package:geodesy/geodesy.dart' as geodesy;
 import 'package:go_out_on_time/types/eta.dart';
 import 'package:go_out_on_time/types/route_stop.dart';
 import 'package:go_out_on_time/types/routes.dart';
@@ -65,6 +67,22 @@ class RouteScreen extends StatefulWidget {
 class _RouteScreenState extends State<RouteScreen> {
   Future<RouteStopList> futureRouteStopList;
 
+  Completer<GoogleMapController> _controller = Completer();
+
+  static final CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(37.42796133580664, -122.085749655962),
+    zoom: 14.4746,
+  );
+
+  Future<void> _goToPosition(double lat, double long) async {
+    CameraPosition _position = CameraPosition(
+      target: LatLng(lat, long),
+      zoom: 19,
+    );
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(_position));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,87 +92,120 @@ class _RouteScreenState extends State<RouteScreen> {
   @override
   Widget build(BuildContext context) {
     Future<LocationData> currentLocation = getLocation();
+    String routeDetail = AppLocalizations.of(context)
+        .fromTo(widget.route.orig.localeString(Localizations.localeOf(context)), widget.route.dest.localeString(Localizations.localeOf(context)));
     return Scaffold(
-        appBar: AppBar(title: Text('New Screen')),
-        body: Center(
-          child: FutureBuilder<LocationData>(
-            future: currentLocation,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                var location = snapshot.data;
-                return FutureBuilder<RouteStopList>(
-                  future: futureRouteStopList,
+        appBar: AppBar(
+            title: Text(
+                '${widget.route.co} ${widget.route.route} $routeDetail')),
+        body: Column(
+          children: [
+            SizedBox(
+              height: 250,
+              child: GoogleMap(
+                mapType: MapType.normal,
+                initialCameraPosition: _kGooglePlex,
+                onMapCreated: (GoogleMapController controller) {
+                  _controller.complete(controller);
+                },
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: FutureBuilder<LocationData>(
+                  future: currentLocation,
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      List<RouteStop> stopWithDistance =
-                          snapshot.data.data.map((stop) {
-                        LatLng stopLoc =
-                            LatLng(stop.stopInfo.lat, stop.stopInfo.long);
-                        LatLng currLoc =
-                            LatLng(location.latitude, location.longitude);
-                        stop.stopInfo.distance = distance(stopLoc, currLoc);
-                        return stop;
-                      }).toList();
-                      String nearestStop = stopWithDistance
-                              .where((stop) => stop.stopInfo.distance < 500)
-                              ?.reduce((curr, next) => curr.stopInfo.distance <
-                                      next.stopInfo.distance
-                                  ? curr
-                                  : next)
-                              ?.stop ??
-                          "";
-                      return ListView(
-                        padding: EdgeInsets.all(8),
-                        children: stopWithDistance.map(
-                          (stop) {
-                            return GestureDetector(
-                                child: Card(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      ExpansionTile(
-                                        leading:
-                                            Text(stop.seq.toString() ?? ""),
-                                        title: Text(stop.stopInfo?.name
-                                                ?.localeString(
-                                                    Localizations.localeOf(
-                                                        context)) ??
-                                            ""),
-                                        subtitle: Text(stop.stopInfo.distance >
-                                                1000
-                                            ? AppLocalizations.of(context)
-                                                .kilometre(
-                                                    (stop.stopInfo.distance /
-                                                            1000)
-                                                        .toStringAsFixed(2))
-                                            : AppLocalizations.of(context)
-                                                .metre(stop.stopInfo.distance
-                                                    .toStringAsFixed(0))),
-                                        children: <Widget>[
-                                          ETAWidget(widget.route, stop.stop)
-                                        ],
-                                        initiallyExpanded:
-                                            nearestStop == stop.stop,
+                      var location = snapshot.data;
+                      return FutureBuilder<RouteStopList>(
+                        future: futureRouteStopList,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            List<RouteStop> stopWithDistance =
+                                snapshot.data.data.map((stop) {
+                              geodesy.LatLng stopLoc = geodesy.LatLng(
+                                  stop.stopInfo.lat, stop.stopInfo.long);
+                              geodesy.LatLng currLoc = geodesy.LatLng(
+                                  location.latitude, location.longitude);
+                              stop.stopInfo.distance =
+                                  distance(stopLoc, currLoc);
+                              return stop;
+                            }).toList();
+                            List<RouteStop> nearStops = stopWithDistance
+                                .where((stop) => stop.stopInfo.distance < 500)
+                                .toList();
+                            String nearestStop = nearStops.isNotEmpty
+                                ? nearStops
+                                        ?.reduce((curr, next) =>
+                                            curr.stopInfo.distance <
+                                                    next.stopInfo.distance
+                                                ? curr
+                                                : next)
+                                        ?.stop ??
+                                    ""
+                                : "";
+                            return ListView(
+                              padding: EdgeInsets.all(8),
+                              children: stopWithDistance.map(
+                                (stop) {
+                                  return GestureDetector(
+                                      child: Card(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: <Widget>[
+                                            ExpansionTile(
+                                              leading: Text(
+                                                  stop.seq.toString() ?? ""),
+                                              title: Text(stop.stopInfo?.name
+                                                      ?.localeString(
+                                                          Localizations
+                                                              .localeOf(
+                                                                  context)) ??
+                                                  ""),
+                                              subtitle: Text(stop
+                                                          .stopInfo.distance >
+                                                      1000
+                                                  ? AppLocalizations.of(context)
+                                                      .kilometre((stop.stopInfo
+                                                                  .distance /
+                                                              1000)
+                                                          .toStringAsFixed(2))
+                                                  : AppLocalizations.of(context)
+                                                      .metre(stop
+                                                          .stopInfo.distance
+                                                          .toStringAsFixed(0))),
+                                              children: <Widget>[
+                                                ETAWidget(
+                                                    widget.route, stop.stop)
+                                              ],
+                                              initiallyExpanded:
+                                                  nearestStop == stop.stop,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                                onTap: () => {});
-                          },
-                        ).toList(),
+                                      onTap: () => {
+                                            _goToPosition(stop.stopInfo.lat,
+                                                stop.stopInfo.long)
+                                          });
+                                },
+                              ).toList(),
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text("${snapshot.error}");
+                          }
+                          return CircularProgressIndicator();
+                        },
                       );
                     } else if (snapshot.hasError) {
                       return Text("${snapshot.error}");
                     }
                     return CircularProgressIndicator();
                   },
-                );
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
-              return CircularProgressIndicator();
-            },
-          ),
+                ),
+              ),
+            ),
+          ],
         ));
   }
 }

@@ -74,6 +74,16 @@ class S {
       args: [metre],
     );
   }
+
+  /// `{from} to {to}`
+  String fromTo(Object from, Object to) {
+    return Intl.message(
+      '$from to $to',
+      name: 'fromTo',
+      desc: '',
+      args: [from, to],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

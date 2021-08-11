@@ -35,6 +35,8 @@ dependencies:
   flutter_search_bar: ^2.1.0
   location: ^4.1.1
   geodesy: ^0.3.2
+  google_maps_flutter: ^2.0.6
+  marquee: ^2.2.0
 
 dev_dependencies:
   flutter_test:

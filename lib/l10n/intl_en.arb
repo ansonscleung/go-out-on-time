@@ -23,5 +23,14 @@
     "placeholders": {
       "metre": {}
     }
+  },
+  "fromTo": "{from} to {to}",
+  "@fromTo": {
+    "type": "text",
+    "placeholders": {
+      "from": {},
+      "to": {}
+    }
   }
+
 }

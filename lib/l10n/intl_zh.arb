@@ -3,5 +3,6 @@
   "goOutOnTime": "準時出街",
   "noETA": "未有預計到達時間提供",
   "kilometre": "{kilometre} 公里",
-  "metre": "{metre} 米"
+  "metre": "{metre} 米",
+  "fromTo": "{from}往{to}"
 }
