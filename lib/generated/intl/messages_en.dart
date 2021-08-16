@@ -7,7 +7,7 @@
 // ignore_for_file:unnecessary_brace_in_string_interps, unnecessary_new
 // ignore_for_file:prefer_single_quotes,comment_references, directives_ordering
 // ignore_for_file:annotate_overrides,prefer_generic_function_type_aliases
-// ignore_for_file:unused_import, file_names
+// ignore_for_file:unused_import, file_names, avoid_escaping_inner_quotes
 
 import 'package:intl/intl.dart';
 import 'package:intl/message_lookup_by_library.dart';
@@ -19,18 +19,18 @@ typedef String MessageIfAbsent(String messageStr, List<dynamic> args);
 class MessageLookup extends MessageLookupByLibrary {
   String get localeName => 'en';
 
-  static m0(from, to) => "${from} to ${to}";
+  static String m0(from, to) => "${from} to ${to}";
 
-  static m1(kilometre) => "${kilometre} km";
+  static String m1(kilometre) => "${kilometre} km";
 
-  static m2(metre) => "${metre} m";
+  static String m2(metre) => "${metre} m";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
-  static _notInlinedMessages(_) => <String, Function> {
-    "fromTo" : m0,
-    "goOutOnTime" : MessageLookupByLibrary.simpleMessage("Go Out On Time"),
-    "kilometre" : m1,
-    "metre" : m2,
-    "noETA" : MessageLookupByLibrary.simpleMessage("No ETA Provided")
-  };
+  static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
+        "fromTo": m0,
+        "goOutOnTime": MessageLookupByLibrary.simpleMessage("Go Out On Time"),
+        "kilometre": m1,
+        "metre": m2,
+        "noETA": MessageLookupByLibrary.simpleMessage("No ETA Provided")
+      };
 }

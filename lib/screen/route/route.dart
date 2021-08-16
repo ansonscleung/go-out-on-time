@@ -68,6 +68,9 @@ class _RouteScreenState extends State<RouteScreen> {
   Future<RouteStopList> futureRouteStopList;
 
   Completer<GoogleMapController> _controller = Completer();
+  Map<MarkerId, Marker> markers = <MarkerId, Marker>{};
+  MarkerId selectedMarker;
+  int _markerIdCounter = 1;
 
   static final CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
@@ -89,15 +92,35 @@ class _RouteScreenState extends State<RouteScreen> {
     futureRouteStopList = fetchRouteStopList(widget.route);
   }
 
+  void _add(int index, RouteStop stop) {
+    final String markerIdVal = 'marker_id_$_markerIdCounter';
+    _markerIdCounter++;
+    final MarkerId markerId = MarkerId(markerIdVal);
+
+    final Marker marker = Marker(
+      markerId: markerId,
+      position: LatLng(stop.stopInfo.lat, stop.stopInfo.long),
+      infoWindow: InfoWindow(title: stop.stopInfo.name.localeString(Localizations.localeOf(context))),
+      onTap: () {
+        _goToPosition(stop.stopInfo.lat, stop.stopInfo.long);
+      },
+    );
+
+    setState(() {
+      markers[markerId] = marker;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     Future<LocationData> currentLocation = getLocation();
-    String routeDetail = AppLocalizations.of(context)
-        .fromTo(widget.route.orig.localeString(Localizations.localeOf(context)), widget.route.dest.localeString(Localizations.localeOf(context)));
+    String routeDetail = AppLocalizations.of(context).fromTo(
+        widget.route.orig.localeString(Localizations.localeOf(context)),
+        widget.route.dest.localeString(Localizations.localeOf(context)));
     return Scaffold(
         appBar: AppBar(
-            title: Text(
-                '${widget.route.co} ${widget.route.route} $routeDetail')),
+            title:
+                Text('${widget.route.co} ${widget.route.route} $routeDetail')),
         body: Column(
           children: [
             SizedBox(
@@ -108,6 +131,7 @@ class _RouteScreenState extends State<RouteScreen> {
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
                 },
+                markers: Set<Marker>.of(markers.values),
               ),
             ),
             Expanded(
@@ -144,6 +168,9 @@ class _RouteScreenState extends State<RouteScreen> {
                                         ?.stop ??
                                     ""
                                 : "";
+                            snapshot.data.data.asMap().forEach((index, stop) =>
+                                Future.delayed(Duration.zero, () =>
+                                  _add(index, stop)));
                             return ListView(
                               padding: EdgeInsets.all(8),
                               children: stopWithDistance.map(
@@ -184,10 +211,10 @@ class _RouteScreenState extends State<RouteScreen> {
                                           ],
                                         ),
                                       ),
-                                      onTap: () => {
-                                            _goToPosition(stop.stopInfo.lat,
-                                                stop.stopInfo.long)
-                                          });
+                                      onTap: () {
+                                        _goToPosition(stop.stopInfo.lat,
+                                            stop.stopInfo.long);
+                                      });
                                 },
                               ).toList(),
                             );
